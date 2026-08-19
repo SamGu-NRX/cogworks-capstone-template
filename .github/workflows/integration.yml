@@ -1,0 +1,78 @@
+# Runs on every push. It does not score you and it does not care whether your
+# answers are right. It checks one thing: do your pieces still fit together?
+#
+# The instructor's line was that making the parts work together at the end is
+# the hardest part of the capstone. This is that check, running from day one,
+# so "it broke when we merged" is something you find out in ninety seconds
+# rather than on Thursday night.
+name: integration
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  seams:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install cogworks-benchmark
+
+      # Does every file still parse, and does every import still resolve?
+      # This is the check that catches a merge where two people renamed the
+      # same function in different directions.
+      - name: every module imports
+        run: |
+          python - <<'PY'
+          import pathlib, py_compile, sys
+          bad = []
+          for path in sorted(pathlib.Path(".").rglob("*.py")):
+              if any(part.startswith(".") for part in path.parts):
+                  continue
+              try:
+                  py_compile.compile(str(path), doraise=True)
+              except py_compile.PyCompileError as error:
+                  bad.append("{}: {}".format(path, error.msg.strip().splitlines()[-1]))
+          if bad:
+              print("These files do not parse:\n  " + "\n  ".join(bad))
+              sys.exit(1)
+          print("All {} files parse.".format(
+              sum(1 for _ in pathlib.Path(".").rglob("*.py"))))
+          PY
+
+      # Does the benchmark still find your submission, and does it still have
+      # the shape it expects? This is the seam between your code and ours, and
+      # it is the one that breaks silently: your team's own tests keep passing
+      # while the thing that scores you cannot find a method it needs.
+      - name: benchmark can still find each week
+        run: |
+          set +e
+          status=0
+          for week_and_benchmark in \
+            "week1 audio-identification" \
+            "week2 vision-recognition" \
+            "week2 vision-clustering" \
+            "week3 language-search"
+          do
+            set -- $week_and_benchmark
+            if [ ! -f "$1/submission.py" ]; then continue; fi
+            echo "--- $1 / $2"
+            (cd "$1" && cogworks check --benchmark "$2") || status=1
+          done
+          exit $status
+
+      # Your own tests, if you have written any. Missing is fine early on and
+      # a good idea by Wednesday.
+      - name: your tests
+        run: |
+          if ls week*/test_*.py week*/tests/ >/dev/null 2>&1; then
+            python -m pip install pytest
+            python -m pytest week1 week2 week3 -q
+          else
+            echo "No tests yet. Worth adding one for whichever piece you own."
+          fi

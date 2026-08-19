@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.cogbench/
+.venv/
+env/
+.DS_Store
+
+# Model weights and caches. Commit trained weights you need for a run
+# deliberately, with `git add -f`, and keep them small. A repository full of
+# .npy files is slow to clone and hides your actual work in the diff.
+*.npy
+*.npz
+*.pkl
+*.pt
+*.pth
+!weights/*.npy
