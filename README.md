@@ -13,7 +13,8 @@ forget it.
 git clone https://github.com/YOUR-TEAM/YOUR-REPO.git
 cd YOUR-REPO
 conda activate week1
-python -m pip install cogworks-benchmark
+python -m pip install --upgrade "cogworks-benchmark @ git+https://github.com/SamGu-NRX/CogPortal.git@fix/product-description-triage#subdirectory=python/cogbench"
+python -m pip install "cogworks-week1-audio-benchmark @ git+https://github.com/SamGu-NRX/cogworks-week1-audio-benchmark.git@b590638a4c6d7b0e840723f5d4d38b1a90070a62"
 cogworks check --benchmark audio-identification
 ```
 
