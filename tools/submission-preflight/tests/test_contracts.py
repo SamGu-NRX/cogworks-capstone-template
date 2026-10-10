@@ -137,7 +137,8 @@ def test_import_failure_is_load_error(synthetic_repo, manifests):
 
 def test_malformed_manifest_is_unexercised_not_invalid(synthetic_repo, tmp_path):
     root = synthetic_repo({"week1": "stub", "week2": "stub", "week3": "valid"})
-    fixtures = build_manifests(tmp_path / "fixtures")
+    fixtures = tmp_path / "fixtures"
+    build_manifests(fixtures)
     path = fixtures / "language-search" / "manifest.json"
     corrupt = path.read_text().replace('"k": 2', '"k": 9')  # k > pool size
     path.write_text(corrupt)
@@ -155,7 +156,8 @@ def test_malformed_manifest_is_unexercised_not_invalid(synthetic_repo, tmp_path)
 
 def test_missing_manifest_is_unexercised(synthetic_repo, tmp_path):
     root = synthetic_repo({"week1": "valid", "week2": "valid", "week3": "valid"})
-    fixtures = build_manifests(tmp_path / "fixtures")
+    fixtures = tmp_path / "fixtures"
+    build_manifests(fixtures)
     (fixtures / "audio-identification" / "manifest.json").unlink()
     receipt = check.run_preflight(root, fixtures)
     audio = only(receipt, "audio-identification")

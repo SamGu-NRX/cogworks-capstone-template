@@ -7,8 +7,6 @@ written into throwaway repository trees so the contracts hold without
 touching any week directory in the real repo.
 """
 
-import json
-import math
 import sys
 from pathlib import Path
 
@@ -20,6 +18,7 @@ if str(TOOL_DIR) not in sys.path:
     sys.path.insert(0, str(TOOL_DIR))
 
 import check  # noqa: E402 - path set up above on purpose
+from check import build_default_fixtures as build_manifests  # noqa: E402,F401
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -320,122 +319,6 @@ WEEK3_FILES = {
 
 
 # ---------------------------------------------------------------------------
-# valid fixture manifests (tiny; pure formulas, no randomness)
-
-
-def sine(freq, count, amp, offset=0, rate=44100):
-    return [
-        round(amp * math.sin(2 * math.pi * freq * (offset + i) / rate), 6)
-        for i in range(count)
-    ]
-
-
-def image_values(base, spread):
-    flat = []
-    for row in range(4):
-        for col in range(4):
-            for channel in range(3):
-                if channel == 0:
-                    flat.append(min(255, base + spread * ((row + col) % 2)))
-                elif channel == 1:
-                    flat.append(min(255, base // 2))
-                else:
-                    flat.append(min(255, max(0, base - 60)))
-    return flat
-
-
-def build_manifests(fixtures_root):
-    """Write one valid manifest per benchmark; returns the root path."""
-    root = Path(fixtures_root)
-    audio = root / "audio-identification"
-    audio.mkdir(parents=True, exist_ok=True)
-    (audio / "manifest.json").write_text(
-        json.dumps(
-            {
-                "version": 1,
-                "sample_rate": 44100,
-                "enroll": [
-                    {"id": "songA", "samples": sine(440, 32, 0.5)},
-                    {"id": "songB", "samples": sine(660, 32, 0.5)},
-                ],
-                "queries": [{"samples": sine(440, 24, 0.25, offset=4)}],
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n"
-    )
-
-    recog = root / "vision-recognition"
-    recog.mkdir(parents=True, exist_ok=True)
-    (recog / "manifest.json").write_text(
-        json.dumps(
-            {
-                "version": 1,
-                "image_shape": [4, 4, 3],
-                "enroll": [
-                    {"person_id": "alice", "images": [{"data": image_values(200, 30)}]},
-                    {"person_id": "bob", "images": [{"data": image_values(60, 30)}]},
-                ],
-                "queries": [{"data": image_values(200, 10)}, {"data": image_values(60, 10)}],
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n"
-    )
-
-    clus = root / "vision-clustering"
-    clus.mkdir(parents=True, exist_ok=True)
-    (clus / "manifest.json").write_text(
-        json.dumps(
-            {
-                "version": 1,
-                "image_shape": [4, 4, 3],
-                "images": [
-                    {"data": image_values(200, 0)},
-                    {"data": image_values(200, 0)},
-                    {"data": image_values(60, 0)},
-                    {"data": image_values(60, 0)},
-                ],
-                "seed": 7,
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n"
-    )
-
-    lang = root / "language-search"
-    lang.mkdir(parents=True, exist_ok=True)
-    descriptors = [
-        round(((i * 37 + j * 11) % 97) / 97 - 0.5, 4)
-        for i in range(4)
-        for j in range(512)
-    ]
-    (lang / "manifest.json").write_text(
-        json.dumps(
-            {
-                "version": 1,
-                "captions": [
-                    "a red ball on grass",
-                    "a dog runs",
-                    "zzq xkcd unseen words",
-                ],
-                "descriptors": {"shape": [4, 512], "data": descriptors},
-                "image_ids": [101, 102, 103, 104],
-                "query": "a red ball",
-                "k": 2,
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n"
-    )
-    return root
-
-
-# ---------------------------------------------------------------------------
 # pytest fixtures
 
 
@@ -446,7 +329,9 @@ def real_repo_root():
 
 @pytest.fixture
 def manifests(tmp_path):
-    return build_manifests(tmp_path / "fixtures")
+    root = tmp_path / "fixtures"
+    build_manifests(root)
+    return root
 
 
 @pytest.fixture

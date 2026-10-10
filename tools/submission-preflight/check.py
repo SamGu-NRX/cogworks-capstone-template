@@ -865,6 +865,117 @@ def run_preflight(repo_root, fixtures_root, weeks=None):
 
 
 # ---------------------------------------------------------------------------
+# default fixture manifests (fully synthetic, deterministic)
+#
+# The fixtures are tiny on purpose: a few dozen sine samples per song, 4x4
+# synthetic images, a 4x512 pseudo-descriptor block. Everything is generated
+# from closed-form formulas -- no random draws, no dataset downloads, no
+# personal data -- so the committed files are byte-stable and the receipt's
+# fixture hashes mean the same bytes for everyone.
+
+
+def _sine(freq, count, amp, offset=0, rate=44100):
+    import math
+
+    return [
+        round(amp * math.sin(2 * math.pi * freq * (offset + i) / rate), 6)
+        for i in range(count)
+    ]
+
+
+def _image_values(base, spread):
+    values = []
+    for row in range(4):
+        for col in range(4):
+            for channel in range(3):
+                if channel == 0:
+                    values.append(min(255, base + spread * ((row + col) % 2)))
+                elif channel == 1:
+                    values.append(min(255, base // 2))
+                else:
+                    values.append(min(255, max(0, base - 60)))
+    return values
+
+
+def build_default_fixtures(fixtures_root):
+    """Write one valid manifest per benchmark under ``fixtures_root``.
+
+    Refuses to touch an existing manifest. Returns the list of written paths.
+    """
+    root = Path(fixtures_root)
+    written = []
+
+    def _emit(benchmark, payload):
+        directory = root / benchmark
+        directory.mkdir(parents=True, exist_ok=True)
+        path = directory / "manifest.json"
+        if path.exists():
+            return
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        written.append(path)
+
+    _emit(
+        "audio-identification",
+        {
+            "version": 1,
+            "sample_rate": 44100,
+            "enroll": [
+                {"id": "songA", "samples": _sine(440, 32, 0.5)},
+                {"id": "songB", "samples": _sine(660, 32, 0.5)},
+            ],
+            "queries": [{"samples": _sine(440, 24, 0.25, offset=4)}],
+        },
+    )
+    _emit(
+        "vision-recognition",
+        {
+            "version": 1,
+            "image_shape": [4, 4, 3],
+            "enroll": [
+                {"person_id": "alice", "images": [{"data": _image_values(200, 30)}]},
+                {"person_id": "bob", "images": [{"data": _image_values(60, 30)}]},
+            ],
+            "queries": [{"data": _image_values(200, 10)}, {"data": _image_values(60, 10)}],
+        },
+    )
+    _emit(
+        "vision-clustering",
+        {
+            "version": 1,
+            "image_shape": [4, 4, 3],
+            "images": [
+                {"data": _image_values(200, 0)},
+                {"data": _image_values(200, 0)},
+                {"data": _image_values(60, 0)},
+                {"data": _image_values(60, 0)},
+            ],
+            "seed": 7,
+        },
+    )
+    descriptors = [
+        round(((i * 37 + j * 11) % 97) / 97 - 0.5, 4)
+        for i in range(4)
+        for j in range(512)
+    ]
+    _emit(
+        "language-search",
+        {
+            "version": 1,
+            "captions": [
+                "a red ball on grass",
+                "a dog runs",
+                "zzq xkcd unseen words",
+            ],
+            "descriptors": {"shape": [4, 512], "data": descriptors},
+            "image_ids": [101, 102, 103, 104],
+            "query": "a red ball",
+            "k": 2,
+        },
+    )
+    return written
+
+
+# ---------------------------------------------------------------------------
 # CLI
 
 
@@ -917,11 +1028,27 @@ def main(argv=None):
     parser.add_argument("--fixtures", default=None, help="fixture root (default: {} under the repo root)".format(DEFAULT_FIXTURES_REL))
     parser.add_argument("--repo-root", default=None, help="repository root (default: the clone this tool lives in)")
     parser.add_argument("--json", default=None, metavar="PATH", help="write the deterministic receipt here ('-' for stdout)")
+    parser.add_argument(
+        "--init-fixtures",
+        default=None,
+        metavar="DIR",
+        help="write the default synthetic fixture manifests into DIR (existing manifests are kept), then exit 0",
+    )
     args = parser.parse_args(argv)
 
     repo_root = Path(args.repo_root).resolve() if args.repo_root else TOOL_DIR.parents[1]
     if not repo_root.is_dir():
         parser.error("repo root not found: {}".format(repo_root))
+
+    if args.init_fixtures:
+        written = build_default_fixtures(args.init_fixtures)
+        if written:
+            for path in written:
+                sys.stdout.write("wrote {}\n".format(_display(path, repo_root)))
+        else:
+            sys.stdout.write("fixtures already present; nothing written\n")
+        return 0
+
     fixtures_root = Path(args.fixtures).resolve() if args.fixtures else repo_root / DEFAULT_FIXTURES_REL
 
     receipt = run_preflight(repo_root, fixtures_root, weeks=args.week)
