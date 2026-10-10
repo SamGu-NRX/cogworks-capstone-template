@@ -1,0 +1,122 @@
+{
+  "benchmark_stack": {
+    "modules_probed": {
+      "cogbench": false,
+      "cogworks": false,
+      "cogworks_benchmark": false
+    },
+    "note": "benchmark package not installed; accuracy is unmeasured here and the preflight never installs it - scoring happens with `cogworks run` on an approved install",
+    "status": "not-installed"
+  },
+  "counts": {
+    "invalid": 0,
+    "load_error": 0,
+    "missing": 4,
+    "modalities": 4,
+    "ok": 0,
+    "refusals": 4,
+    "unexercised": 0
+  },
+  "dependency_identity": {
+    "__future__": "not installed",
+    "numpy": "2.3.5",
+    "typing": "not installed"
+  },
+  "fixture_identity": {
+    "audio-identification": "2c7c5e7599414ef3f661514226074155d5c1ea0c311f1dacaa7b481ad0fd463f",
+    "language-search": "be0dcaa18a7471e729e91df0ce57a354b852f44aa8a341365b57fe4ea7f771a2",
+    "vision-clustering": "678522697e08478ed12c6b18c3c40c4c95e7f600bed33bd3b7f1513fd14cba15",
+    "vision-recognition": "b55375b00421908cffea4c85f5066436ca57c73ac80aa563fc61d409af286905"
+  },
+  "interpreter_identity": {
+    "implementation": "cpython",
+    "version": "3.13.14"
+  },
+  "receipt_version": 1,
+  "results": [
+    {
+      "benchmark": "audio-identification",
+      "factory": "create_submission",
+      "fixture": "tools/submission-preflight/fixtures/audio-identification/manifest.json",
+      "next_action": "replace the NotImplementedError stub in week1/submission.py: create_submission must build your adapter (see the file's own docstring); then rerun: python tools/submission-preflight/check.py --week week1 --fixtures tools/submission-preflight/fixtures",
+      "refusal": true,
+      "source": "week1/submission.py",
+      "steps": [
+        {
+          "detail": "raises NotImplementedError (build your database here)",
+          "method": "construct",
+          "status": "missing"
+        }
+      ],
+      "verdict": "missing",
+      "week": "week1"
+    },
+    {
+      "benchmark": "vision-recognition",
+      "factory": "create_recognition_submission",
+      "fixture": "tools/submission-preflight/fixtures/vision-recognition/manifest.json",
+      "next_action": "replace the NotImplementedError stub in week2/submission.py: create_recognition_submission must build your adapter (see the file's own docstring); then rerun: python tools/submission-preflight/check.py --week week2 --fixtures tools/submission-preflight/fixtures",
+      "refusal": true,
+      "source": "week2/submission.py",
+      "steps": [
+        {
+          "detail": "raises NotImplementedError (set up your database and model here)",
+          "method": "construct",
+          "status": "missing"
+        }
+      ],
+      "verdict": "missing",
+      "week": "week2"
+    },
+    {
+      "benchmark": "vision-clustering",
+      "factory": "create_clustering_submission",
+      "fixture": "tools/submission-preflight/fixtures/vision-clustering/manifest.json",
+      "next_action": "replace the NotImplementedError stub in week2/submission.py: create_clustering_submission must build your adapter (see the file's own docstring); then rerun: python tools/submission-preflight/check.py --week week2 --fixtures tools/submission-preflight/fixtures",
+      "refusal": true,
+      "source": "week2/submission.py",
+      "steps": [
+        {
+          "detail": "raises NotImplementedError (set up your model here)",
+          "method": "construct",
+          "status": "missing"
+        }
+      ],
+      "verdict": "missing",
+      "week": "week2"
+    },
+    {
+      "benchmark": "language-search",
+      "factory": "create_submission",
+      "fixture": "tools/submission-preflight/fixtures/language-search/manifest.json",
+      "next_action": "replace the NotImplementedError stub in week3/submission.py: create_submission must build your adapter (see the file's own docstring); then rerun: python tools/submission-preflight/check.py --week week3 --fixtures tools/submission-preflight/fixtures",
+      "refusal": true,
+      "source": "week3/submission.py",
+      "steps": [
+        {
+          "detail": "raises NotImplementedError (load your weights, GloVe, and IDF table)",
+          "method": "construct",
+          "status": "missing"
+        }
+      ],
+      "verdict": "missing",
+      "week": "week3"
+    }
+  ],
+  "selection": {
+    "weeks": [
+      "week1",
+      "week2",
+      "week3"
+    ]
+  },
+  "source_identity": {
+    "files": {
+      "week1/submission.py": "dd45d458367121f3e5d7bd66242f24968f135bfeefda8394fa425328515da575",
+      "week2/submission.py": "8869618d936732d582517abbcc109ccda635431e472620dbf9edca5fc5d5cda9",
+      "week3/submission.py": "6f84ea55d527b168ffa6edcb57e588a5cb84dc07c9cf986a4fcebfe2d906b68e"
+    },
+    "git_commit": "aa0d8911826e52f209a8c17cb8526129a704b031"
+  },
+  "tool": "tools/submission-preflight/check.py"
+}
