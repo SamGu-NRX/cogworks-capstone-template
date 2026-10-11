@@ -48,8 +48,16 @@ Two bugs, one lesson each, and both fixes are already in `reference.py`
 as two lines of housekeeping: `visited` becomes a set built inside the
 function (fresh per call), and the result is built as `[row[:] for row in
 grid]` so the caller's rows are copied, never written. Make both changes
-in `broken.py` -- repair the mutation first, run the runner, watch
-`check_input_untouched` go green while `check_two_calls_exact` still
-fails; then repair the state, run again, and watch the second grid fill
-completely. The second call was never wrong. It was just first in line
-behind the first call's leftovers.
+in `broken.py`, and grade yourself with the gate as you go:
+
+```bash
+python learning-labs/validate.py --lab grid
+```
+
+Repair the mutation first: the gate still exits 1, but
+`check_input_untouched` joins the pass column while
+`check_two_calls_exact` keeps failing -- partial progress is visible
+after every change, never silently swallowed. Then repair the state, run
+it again, and watch it exit 0: the second grid fills completely. The
+second call was never wrong. It was just first in line behind the first
+call's leftovers.

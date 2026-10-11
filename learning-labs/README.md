@@ -20,11 +20,14 @@ limit.
 | vector | rank four 8-dim descriptors by cosine against a query | normalization that rewrites the caller's dict mid-call -- every returned id and score is right, and your input is gone |
 | grid | 4-connected flood fill on a 6x8 grid, returning a new grid | labels written into the caller's grid, and a visited set that survives the call -- the second fill is truncated by the first |
 
-Each lab ships the same five parts: `fixtures.py` (the authored inputs and
+Each lab ships the same six parts: `fixtures.py` (the authored inputs and
 the public expected results), `reference.py` (a working version),
 `broken.py` (a broken version that says in its docstring exactly which
-check it fails), `checks.py` (the strict checks -- one source of truth used
-by both pytest and the runner), and a README that poses the question and
+check it fails -- the one file you are invited to edit), `control.py`
+(an immutable twin of the same defect, hash-pinned in `controls.json`:
+the pristine copy the integrity tests watch, never touched by anyone),
+`checks.py` (the strict checks -- one source of truth used by pytest,
+the runner, and the validator), and a README that poses the question and
 walks the repair.
 
 ## Running it
@@ -32,21 +35,30 @@ walks the repair.
 From the repository root:
 
 ```bash
-python -m pytest -q learning-labs/tests     # the strict suite, 18 tests
-python learning-labs/run.py --all           # the lesson runner
+python -m pytest -q learning-labs/tests     # integrity suite, 20 tests
+python learning-labs/run.py --all           # the tour: watch the checks fail
 python learning-labs/run.py --lab audio     # one lab at a time
+python learning-labs/validate.py --all      # the gate: did YOUR repair land?
+python learning-labs/validate.py --lab audio
 ```
 
 The runner prints, per lab: the experimental question, a BEFORE block
 (every check run against `broken.py`, failures shown with readable diffs),
-an AFTER block (the same checks against `reference.py`), and a verdict. It
-exits 0 only when every lesson is intact -- meaning broken.py fails
-exactly the checks its lab says it fails. Also works from inside the
-directory: `cd learning-labs && python run.py --all`.
+the same checks against `reference.py` (for diffing after your repair
+works), and the immutable `control.py` still failing exactly as
+documented. Its verdict describes the fixed side of the lesson, so it
+reads the same before you touch anything and after your repair lands.
 
-Exact observed outputs from each milestone live in
-[results/](results/). Every module path, signature, constant, and command
-is documented in [INTERFACE.md](INTERFACE.md).
+`validate.py` is the command that grades you: it runs every strict check
+against *your* `broken.py` and exits 0 only when all of them pass --
+traps included. Also works from inside the directory: `cd learning-labs
+&& python run.py --all` (and the `validate.py` equivalent).
+
+Exact observed outputs from each milestone live in [results/](results/),
+including a full fail-repair-pass-restore execution of the new workflow in
+[results/REPAIR-OUTCOMES.md](results/REPAIR-OUTCOMES.md). Every module
+path, signature, constant, and command is documented in
+[INTERFACE.md](INTERFACE.md).
 
 ## The repair loop
 
@@ -60,16 +72,22 @@ This is the whole exercise, and it takes about fifteen minutes per lab:
 3. Repair it. Not by copying `reference.py` -- by understanding the
    boundary, the ownership, or the state that the strict check is
    standing guard over.
-4. Run again. The verdict flips to intact when `broken.py` fails exactly
-   as documented and nothing else. If you "repair" it by breaking a check
-   that was passing, the runner tells you the lesson has drifted.
+4. Prove it: `python learning-labs/validate.py --lab audio`. Exit 0 means
+   every strict check passes on your `broken.py`, traps included -- you
+   cannot repair by breaking a check that was passing, because the gate
+   refuses to flip until all of them hold. Until then it prints the
+   failing checks with their diffs, and partial progress counts: fix the
+   grid lab's mutation first and the gate shows exactly one check still
+   red.
 5. Compare with `reference.py`. Usually the fix is one line, and the
    interesting part is why that line was wrong.
 
 `python -m pytest -q learning-labs/tests` passes at every step of this
-loop -- it tests the reference, not your repair. Your repair is checked by
-the runner. That split is deliberate, and it is the same split the
-capstone has: your own suite green, the benchmark red.
+loop -- it tests the fixed side of each lesson (the pinned controls, the
+reference), never your `broken.py`. Your repair is graded by
+`validate.py`. That split is deliberate, and it is the same split the
+capstone has: your own suite green, the benchmark red -- except here the
+benchmark is yours to run, for free, as often as you like.
 
 ## What this is not
 

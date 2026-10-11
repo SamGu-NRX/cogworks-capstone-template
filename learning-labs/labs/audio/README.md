@@ -44,11 +44,16 @@ window = song[offset:offset + len(clip) - 1]
 
 Ask, before touching anything: how many samples does `song[a:b]` contain,
 and how many do you owe the caller? Fix the slice -- the fix is one
-character. Then run the runner again and read the verdict.
+character. Then prove the repair:
 
-If you are tempted to "fix" the score by changing the denominator instead
-of the window: notice that the runner calls that drift -- the lesson is
-intact only when `broken.py` fails *as documented*, and
-`check_exact_alignment` will still be waiting at 0.975. When it is intact,
-compare with `reference.py`, which computes the same answer with a window
-that covers every sample it scores.
+```bash
+python learning-labs/validate.py --lab audio
+```
+
+It runs both checks against *your* `broken.py` and exits 0 only when
+every check passes -- `check_best_id` included, so you cannot repair by
+breaking the loose test. If you are tempted to "fix" the score by
+changing the denominator instead of the window, the gate catches that
+too: `check_exact_alignment` will still be waiting at 0.975. When it
+exits 0, compare with `reference.py`, which computes the same answer with
+a window that covers every sample it scores.

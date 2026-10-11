@@ -48,6 +48,14 @@ Open `broken.py` and find the line that writes through the reference the
 caller lent you. The repair is to build the normalized values as new
 floats and return pairs keyed by the *original* ids -- one line changes,
 and the ranking it returns does not move by a digit. That is the point:
-the output was never wrong. Then run the runner again, and when it is
-intact, compare with `reference.py` and notice how little had to change
-to stop breaking your caller's data.
+the output was never wrong. Then prove it:
+
+```bash
+python learning-labs/validate.py --lab vector
+```
+
+Exit 0 means every strict check passes on *your* `broken.py` -- the two
+traps included, so a repair that stops the mutation by breaking the
+ranking check is rejected like any other failure. When the gate flips,
+compare with `reference.py` and notice how little had to change to stop
+breaking your caller's data.
